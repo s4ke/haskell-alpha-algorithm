@@ -1,6 +1,10 @@
 {-# LANGUAGE MonadComprehensions #-}
-module Lib
+module Algorithm.Petri
     (
+      Place(..),
+      Transition(..),
+      Edge(..),
+      Petri(..),
       alphaAlgorithm
     ) where
 
@@ -54,7 +58,7 @@ data Place a = Place (Set a) (Set a) | I | O deriving (Eq, Ord)
 instance (Ord a, Show a) => Show (Place a) where
   show I = "I"
   show O = "O"
-  show (Place a b) = "p(" ++ show (toList a) ++ "," ++ show (toList b) ++ "}"
+  show (Place a b) = "p(" ++ show (toList a) ++ "," ++ show (toList b) ++ ")"
 
 data Transition a = Transition a deriving (Eq, Ord)
 instance (Show a) => Show (Transition a) where
@@ -75,13 +79,13 @@ alphaAlgorithm logs = let
                           choices = choice (dom logs) immediates
 
                           t_l = dom logs
-                          t_i = S.fromList $ Prelude.map (head) logs
-                          t_o = S.fromList $ Prelude.map (last) logs
+                          t_i = S.fromList $ Prelude.map head logs
+                          t_o = S.fromList $ Prelude.map last logs
 
                           checkCausal as bs = S.null [(a, b) | (a, b) <- cartesianProduct as bs, not (S.member (Causal a b) causals)]
                           checkChoice as = S.null [(a1, a2) | (a1, a2) <- cartesianProduct as as, not (S.member (Choice a1 a2) choices)]
                           x_l = [(as, bs) | as <- powerset t_l, bs <- powerset t_l,
-                                            not (S.null as), not (S.null bs), 
+                                            not (S.null as), not (S.null bs),
                                             checkCausal as bs, checkChoice as, checkChoice bs]
 
                           checkMaxSet as bs = S.null [(as', bs') | (as', bs') <- x_l, as `S.isProperSubsetOf` as', bs `S.isProperSubsetOf` bs']

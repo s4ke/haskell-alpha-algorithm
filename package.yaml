@@ -26,7 +26,7 @@ library:
   source-dirs: src
   dependencies:
     - containers >= 0.5.11 && <0.6
-    - set-monad
+    - set-monad >= 0.2 && < 0.3
 
 executables:
   process-mining-alpha-exe:
@@ -38,6 +38,10 @@ executables:
     - -with-rtsopts=-N
     dependencies:
     - process-mining-alpha
+    - containers >= 0.5.11 && <0.6
+    - set-monad >= 0.2 && < 0.3
+    - diagrams-lib >= 1.4 && < 1.5
+    - diagrams-svg >=1.4 && <1.5
 
 tests:
   process-mining-alpha-test:

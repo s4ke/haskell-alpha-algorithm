@@ -3,4 +3,11 @@ packages:
 - .
 extra-deps:
 - containers-0.5.11.0
+- diagrams-lib-1.4.2
+- diagrams-core-1.4.0.1
+- diagrams-solve-0.1.1
+- dual-tree-0.2.1
+- lens-4.15.4
+- free-4.12.4
+- diagrams-svg-1.4.1.1
 resolver: lts-11.3

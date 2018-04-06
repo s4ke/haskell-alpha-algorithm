@@ -2,7 +2,7 @@
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 419097d1c09d45750ed6820e7d3bc4ccf1d8cc550270e6dc3ad97521a920d5c3
+-- hash: 6faf7ddacab73092b062320cf24e6e4fc69e6d1857a07bb9cba8fb53bb676adb
 
 name:           process-mining-alpha
 version:        0.1.0.0
@@ -31,9 +31,9 @@ library
   build-depends:
       base >=4.7 && <5
     , containers >=0.5.11 && <0.6
-    , set-monad
+    , set-monad >=0.2 && <0.3
   exposed-modules:
-      Lib
+      Algorithm.Petri
   other-modules:
       Paths_process_mining_alpha
   default-language: Haskell2010
@@ -45,7 +45,11 @@ executable process-mining-alpha-exe
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base >=4.7 && <5
+    , containers >=0.5.11 && <0.6
+    , diagrams-lib >=1.4 && <1.5
+    , diagrams-svg >=1.4 && <1.5
     , process-mining-alpha
+    , set-monad >=0.2 && <0.3
   other-modules:
       Paths_process_mining_alpha
   default-language: Haskell2010
