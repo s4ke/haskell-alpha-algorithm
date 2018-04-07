@@ -59,27 +59,34 @@ intoLayers (places, transitions, edges) = go ((S.map Left places) `S.union` (S.m
 
 nodeToDiagram :: (Ord a, Show a) => Node a -> Diagram B
 nodeToDiagram (Left p) = text (show p) # fontSizeL 0.2 # fc white
-     <> rect 0.4 0.4 # fc green # named (show p)
+     <> circle 0.2 # fc green # named (show p)
+-- TODO do not print places name ontop of the node
 nodeToDiagram (Right t) = text (show t) # fontSizeL 0.2 # fc white
-     <> circle 0.2 # fc green # named (show t)
+     <> rect 0.4 0.4 # fc green # named (show t)
 
 layerToDiagram :: (Ord a, Show a) => Layer a -> Diagram B
 layerToDiagram layer = mconcat $ zipWith (\d num -> d # translate (r2 (num * 2, 0))) (Prelude.map nodeToDiagram $ toList $ fst $ layer) [1..]
-
-
 
 arrowOpts = with & gaps       .~ small
                   & headLength .~ local 0.15
 
 plotLayers :: (Ord a, Show a) => [Layer a] -> Diagram B
-plotLayers layers = 
-  nodes -- # applyAll [connectOutside' arrowOpts j k | j <- [1 .. n-1], k <- [j+1 .. n]]
+plotLayers layers =
+  nodes # applyEdges
     where
       nodes = mconcat $ zipWith (\d num -> d # translate (r2 (0, num * 2))) (Prelude.map layerToDiagram layers) [1..]
---  # applyAll [connectOutside' arrowOpts j k | j <- [1 .. n-1], k <- [j+1 .. n]]
+      allEdgesAsStringTuples = concat $ Prelude.map (edgesAsStringTuples . snd) layers
+      applyEdges = applyAll $ Prelude.map (uncurry (connectOutside' arrowOpts)) $ allEdgesAsStringTuples
+
+      edgesAsStringTuples :: (Ord a, Show a) => Set (Edge a) -> [(String, String)]
+      edgesAsStringTuples edges = Prelude.map edgeAsStringTuple $ toList edges
+
+      edgeAsStringTuple :: (Ord a, Show a) => Edge a -> (String, String)
+      edgeAsStringTuple (ToPlace a b) = (show a, show b)
+      edgeAsStringTuple (ToTransition a b) = (show a, show b)
 
 main :: IO ()
 main = do
   let petriInLayers = intoLayers $ alphaAlgorithm $ processLog
   print $ petriInLayers
-  mainWith $ plotLayers $ petriInLayers 
+  mainWith $ plotLayers $ petriInLayers
