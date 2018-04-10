@@ -13,6 +13,8 @@ import Data.Set.Monad as S
 import Data.Maybe
 import Data.Semigroup
 
+import Debug.Trace
+
 data Prec a = Immediate a a | Causal a a | Choice a a | Parallel a a deriving (Show, Eq, Ord)
 
 dom :: (Ord a) => [[a]] -> Set a
@@ -71,7 +73,7 @@ instance (Ord a, Show a) => Show (Edge a) where
 
 type Petri a = (Set (Place a), Set (Transition a), Set (Edge a))
 
-alphaAlgorithm :: (Ord a) => [[a]] -> Petri a
+alphaAlgorithm :: (Show a, Ord a) => [[a]] -> Petri a
 alphaAlgorithm logs = let
                           immediates = immediate logs
                           causals = causal immediates
@@ -82,14 +84,14 @@ alphaAlgorithm logs = let
                           t_i = S.fromList $ Prelude.map head logs
                           t_o = S.fromList $ Prelude.map last logs
 
-                          checkCausal as bs = S.null [(a, b) | (a, b) <- cartesianProduct as bs, not (S.member (Causal a b) causals)]
-                          checkChoice as = S.null [(a1, a2) | (a1, a2) <- cartesianProduct as as, not (S.member (Choice a1 a2) choices)]
-                          x_l = [(as, bs) | as <- powerset t_l, bs <- powerset t_l,
+                          checkCausal as bs = all (\(a, b) -> S.member (Causal a b) causals) $ cartesianProduct as bs
+                          checkChoice as = all (\(a1, a2) -> S.member (Choice a1 a2) choices) $ cartesianProduct as as
+                          x_w = [(as, bs) | as <- powerset t_l, bs <- powerset t_l,
                                             not (S.null as), not (S.null bs),
                                             checkCausal as bs, checkChoice as, checkChoice bs]
 
-                          checkMaxSet as bs = S.null [(as', bs') | (as', bs') <- x_l, as `S.isProperSubsetOf` as', bs `S.isProperSubsetOf` bs']
-                          y_l = [(as, bs) | (as, bs) <- x_l, checkMaxSet as bs]
+                          maxSetFilter (as, bs) = all ((\(as', bs') -> not (as `S.isSubsetOf` as' && bs `S.isSubsetOf` bs') || (as == as' && bs == bs'))) x_w
+                          y_l = S.filter maxSetFilter x_w
 
                           p_l = [Place as bs | (as, bs) <- y_l] `S.union` fromList [I, O]
 

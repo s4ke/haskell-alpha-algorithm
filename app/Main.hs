@@ -9,8 +9,19 @@ import Data.Set.Monad as S
 import Diagrams.Prelude
 import Diagrams.Backend.SVG.CmdLine
 
+processLog1 = [["A", "B", "C", "D"], ["A", "C", "B", "D"], ["A", "E", "D"]]
+
+processLog2 =
+  [
+    ["1", "2", "3"],
+    ["2", "1", "3"],
+    ["1", "2", "3", "5"],
+    ["1", "2", "3", "4"],
+    ["1", "4", "3"]
+  ]
+
 processLog :: [[String]]
-processLog = [["1", "2", "3"], ["2", "1", "3"]]
+processLog = processLog1
 
 type Node a = Either (Place a) (Transition a)
 type Layer a = (Set (Node a), Set (Edge a))
@@ -55,13 +66,21 @@ intoLayers (places, transitions, edges) = go ((S.map Left places) `S.union` (S.m
             endPoints edges = S.map extractEndPoint edges
 
             relevantEdges = S.foldr S.union S.empty $ S.map (edgesFrom edges) $ curLayer
-            nextCurLayer = (endPoints relevantEdges) `S.intersection` nextRemaining
+
+            isNextLayerLast = nextRemaining == singleton (Left O)
+
+            nextCurLayer =
+              (endPoints relevantEdges)
+              `S.intersection`
+              (if isNextLayerLast then nextRemaining else S.filter (\x -> x /= (Left O)) nextRemaining)
 
 nodeToDiagram :: (Ord a, Show a) => Node a -> Diagram B
-nodeToDiagram (Left p) = text (show p) # fontSizeL 0.2 # fc white
-     <> circle 0.2 # fc green # named (show p)
--- TODO do not print places name ontop of the node
-nodeToDiagram (Right t) = text (show t) # fontSizeL 0.2 # fc white
+nodeToDiagram (Left p)
+    | (Place a b) <- p = plt ""
+    | otherwise = plt $ show p
+        where plt txt = text txt # fontSizeL 0.2 # fc white <> circle 0.2 # fc green # named (show p)
+-- TODO: fix sizes in nodes
+nodeToDiagram (Right t@(Transition a)) = text (show a) # fontSizeL 0.2 # fc white
      <> rect 0.4 0.4 # fc green # named (show t)
 
 layerToDiagram :: (Ord a, Show a) => Layer a -> Diagram B
@@ -88,5 +107,5 @@ plotLayers layers =
 main :: IO ()
 main = do
   let petriInLayers = intoLayers $ alphaAlgorithm $ processLog
-  print $ petriInLayers
+  -- print $ petriInLayers
   mainWith $ plotLayers $ petriInLayers
